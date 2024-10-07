@@ -1,12 +1,10 @@
 ﻿using Rocket.API;
-using Rocket.API.Serialisation;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
 using System.Collections.Generic;
 using System.Linq;
 using ZaupShop.Helpers;
-using Logger = Rocket.Core.Logging.Logger;
 
 namespace ZaupShop.Commands
 {
@@ -90,7 +88,6 @@ namespace ZaupShop.Commands
                 return;
             }
 
-
             decimal? buyback = null;
             if (!isVehicle && msg.Length > 3)
             {
@@ -98,15 +95,14 @@ namespace ZaupShop.Commands
                 {
                     UnturnedChat.Say(caller, pluginInstance.Translate("invalid_buyback"));
                     return;
-                } else
+                }
+                else
                 {
                     buyback = buyBackDecimal;
-                }                
+                }
             }
 
             string name;
-            bool success;
-
             if (isVehicle)
             {
                 if (!UnturnedHelper.TryGetVehicleByIdOrName(id.ToString(), out _, out name))
@@ -114,7 +110,6 @@ namespace ZaupShop.Commands
                     UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
                     return;
                 }
-                success = pluginInstance.ShopDB.AddVehicle(id, name, cost, isChange);
             }
             else
             {
@@ -122,27 +117,37 @@ namespace ZaupShop.Commands
                 {
                     UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
                     return;
-                }               
-
-                success = pluginInstance.ShopDB.AddItem(id, name, cost, isChange, buyback);
-            }
-
-            string message;
-            if (success)
-            {
-                if (buyback.HasValue)
-                {
-                    message = pluginInstance.Translate("changed_or_added_to_shop_with_buyback", action, name, cost.ToString("N"), buyback.Value.ToString("N"));
-                } else
-                {
-                    message = pluginInstance.Translate("changed_or_added_to_shop", action, name, cost.ToString("N"));
                 }
-            } else
-            {
-                message = pluginInstance.Translate("error_adding_or_changing", name);
             }
 
-            UnturnedChat.Say(caller, message);
+            ThreadHelper.RunAsynchronously(() =>
+            {
+                bool success = isVehicle
+                    ? pluginInstance.ShopDB.AddVehicle(id, name, cost, isChange)
+                    : pluginInstance.ShopDB.AddItem(id, name, cost, isChange, buyback);
+
+                ThreadHelper.RunSynchronously(() =>
+                {
+                    string message;
+                    if (success)
+                    {
+                        if (buyback.HasValue)
+                        {
+                            message = pluginInstance.Translate("changed_or_added_to_shop_with_buyback", action, name, cost.ToString("N"), buyback.Value.ToString("N"));
+                        }
+                        else
+                        {
+                            message = pluginInstance.Translate("changed_or_added_to_shop", action, name, cost.ToString("N"));
+                        }
+                    }
+                    else
+                    {
+                        message = pluginInstance.Translate("error_adding_or_changing", name);
+                    }
+
+                    UnturnedChat.Say(caller, message);
+                });
+            });
         }
 
         private void HandleRemove(IRocketPlayer caller, string[] type, ushort id, bool isConsole)
@@ -151,7 +156,6 @@ namespace ZaupShop.Commands
 
             bool isVehicle = type[0] == "v";
             string name;
-            bool success;
 
             if (isVehicle)
             {
@@ -160,7 +164,6 @@ namespace ZaupShop.Commands
                     UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
                     return;
                 }
-                success = pluginInstance.ShopDB.DeleteVehicle(id);
             }
             else
             {
@@ -169,14 +172,23 @@ namespace ZaupShop.Commands
                     UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
                     return;
                 }
-                success = pluginInstance.ShopDB.DeleteItem(id);
             }
 
-            string message = success
-                ? pluginInstance.Translate("removed_from_shop", name)
-                : pluginInstance.Translate("not_in_shop_to_remove", name);
+            ThreadHelper.RunAsynchronously(() =>
+            {
+                bool success = isVehicle
+                    ? pluginInstance.ShopDB.DeleteVehicle(id)
+                    : pluginInstance.ShopDB.DeleteItem(id);
 
-            UnturnedChat.Say(caller, message);
+                ThreadHelper.RunSynchronously(() =>
+                {
+                    string message = success
+                        ? pluginInstance.Translate("removed_from_shop", name)
+                        : pluginInstance.Translate("not_in_shop_to_remove", name);
+
+                    UnturnedChat.Say(caller, message);
+                });
+            });
         }
 
         private void HandleBuy(IRocketPlayer caller, string[] msg, ushort id, bool isConsole)
@@ -195,12 +207,19 @@ namespace ZaupShop.Commands
                 return;
             }
 
-            bool success = pluginInstance.ShopDB.SetBuyPrice(id, buyPrice);
-            string message = success
-                ? pluginInstance.Translate("set_buyback_price", name, buyPrice.ToString())
-                : pluginInstance.Translate("not_in_shop_to_set_buyback", name);
+            ThreadHelper.RunAsynchronously(() =>
+            {
+                bool success = pluginInstance.ShopDB.SetBuyPrice(id, buyPrice);
 
-            UnturnedChat.Say(caller, message);
+                ThreadHelper.RunSynchronously(() =>
+                {
+                    string message = success
+                        ? pluginInstance.Translate("set_buyback_price", name, buyPrice.ToString())
+                        : pluginInstance.Translate("not_in_shop_to_set_buyback", name);
+
+                    UnturnedChat.Say(caller, message);
+                });
+            });
         }
 
         private bool HasRequiredPermission(IRocketPlayer caller, string action, bool isConsole)

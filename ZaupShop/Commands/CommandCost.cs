@@ -42,14 +42,21 @@ namespace ZaupShop.Commands
                     return;
                 }
 
-                decimal cost = pluginInstance.ShopDB.GetVehicleCost(id);
-                if (cost <= 0m)
+                ThreadHelper.RunAsynchronously(() =>
                 {
-                    UnturnedChat.Say(playerId, pluginInstance.Translate("error_getting_cost", name));
-                    return;
-                }
+                    decimal cost = pluginInstance.ShopDB.GetVehicleCost(id);
+                    ThreadHelper.RunSynchronously(() =>
+                    {
+                        if (cost <= 0m)
+                        {
+                            UnturnedChat.Say(playerId, pluginInstance.Translate("error_getting_cost", name));
+                            return;
+                        }
 
-                UnturnedChat.Say(playerId, pluginInstance.Translate("vehicle_cost_msg", name, cost.ToString("N"), moneyName));
+                        UnturnedChat.Say(playerId, pluginInstance.Translate("vehicle_cost_msg", name, cost.ToString("N"), moneyName));
+                    });
+                });                
+                
                 return;
             }
 
@@ -59,16 +66,22 @@ namespace ZaupShop.Commands
                 return;
             }
 
-            decimal itemCost = pluginInstance.ShopDB.GetItemCost(id);
-            if (itemCost <= 0m)
+            ThreadHelper.RunAsynchronously(() =>
             {
-                UnturnedChat.Say(playerId, pluginInstance.Translate("error_getting_cost", name));
-                return;
-            }
+                decimal itemCost = pluginInstance.ShopDB.GetItemCost(id);
+                decimal buybackPrice = pluginInstance.ShopDB.GetItemBuyPrice(id);
 
-            decimal buybackPrice = pluginInstance.ShopDB.GetItemBuyPrice(id);
-            
-            UnturnedChat.Say(playerId, pluginInstance.Translate("item_cost_msg", name, itemCost.ToString("N"), moneyName, buybackPrice.ToString("N"), moneyName));
+                ThreadHelper.RunSynchronously(() =>
+                {
+                    if (itemCost <= 0 && buybackPrice <= 0)
+                    {
+                        UnturnedChat.Say(playerId, pluginInstance.Translate("error_getting_cost", name));
+                        return;
+                    }
+
+                    UnturnedChat.Say(playerId, pluginInstance.Translate("item_cost_msg", name, itemCost.ToString("N"), moneyName, buybackPrice.ToString("N"), moneyName));
+                });                
+            });
         }
     }
 }

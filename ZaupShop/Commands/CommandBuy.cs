@@ -16,9 +16,9 @@ namespace ZaupShop.Commands
         public AllowedCaller AllowedCaller => AllowedCaller.Player;
         public string Name => "buy";
         public string Help => "Allows you to buy items from the shop.";
-        public string Syntax => "[v.]<name or id> [amount] [25 | 50 | 75 | 100]";
-        public List<string> Aliases => new List<string>();
-        public List<string> Permissions => new List<string>();
+        public string Syntax => "[v.]<name or id> [amount]";
+        public List<string> Aliases => [ "bal" ];
+        public List<string> Permissions => [];
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
@@ -60,101 +60,77 @@ namespace ZaupShop.Commands
 
             ushort id;
             string name;
-            decimal cost;
+            string itemToFind = isVehicle ? components[1] : components[0];
 
             if (isVehicle)
             {
-                if (!UnturnedHelper.TryGetVehicleByIdOrName(components[1], out id, out name))
+                if (!UnturnedHelper.TryGetVehicleByIdOrName(itemToFind, out id, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", components[1]));
+                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", itemToFind));
                     return;
                 }
-                cost = pluginInstance.ShopDB.GetVehicleCost(id);
             }
             else
             {
-                if (!UnturnedHelper.TryGetItemByIdOrName(components[0], out id, out name))
+                if (!UnturnedHelper.TryGetItemByIdOrName(itemToFind, out id, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", components[0]));
+                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", itemToFind));
                     return;
                 }
-                cost = decimal.Round(pluginInstance.ShopDB.GetItemCost(id) * amountToBuy, 2);
             }
 
-            if (cost <= 0m)
+            ThreadHelper.RunAsynchronously(() =>
             {
-                if (isVehicle)
+                decimal cost = isVehicle
+                    ? pluginInstance.ShopDB.GetVehicleCost(id)
+                    : decimal.Round(pluginInstance.ShopDB.GetItemCost(id) * amountToBuy, 2);
+
+                decimal balance = Uconomy.Instance.Database.GetBalance(player.CSteamID.ToString());
+
+                ThreadHelper.RunSynchronously(() =>
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("vehicle_not_available", name));
-                }
-                else
-                {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("item_not_available", name));
-                }
-                return;
-            }
+                    if (cost <= 0m)
+                    {
+                        UnturnedChat.Say(caller, pluginInstance.Translate(isVehicle ? "vehicle_not_available" : "item_not_available", name));
+                        return;
+                    }
 
-            decimal balance = Uconomy.Instance.Database.GetBalance(player.CSteamID.ToString());
-            if (balance < cost)
-            {
-                string amountString;
-                if (isVehicle)
-                {
-                    amountString = "1";
-                }
-                else
-                {
-                    amountString = amountToBuy.ToString();
-                }
-                UnturnedChat.Say(caller, pluginInstance.Translate("not_enough_currency_msg",
-                    Uconomy.Instance.Configuration.Instance.MoneyName, amountString, name));
-                return;
-            }
+                    if (balance < cost)
+                    {
+                        string amountString = isVehicle ? "1" : amountToBuy.ToString();
+                        UnturnedChat.Say(caller, pluginInstance.Translate("not_enough_currency_msg",
+                            Uconomy.Instance.Configuration.Instance.MoneyName, amountString, name));
+                        return;
+                    }
 
-            bool success;
-            if (isVehicle)
-            {
-                success = player.GiveVehicle(id);
-            }
-            else
-            {
-                success = player.GiveItem(id, amountToBuy);
-            }
+                    bool success = isVehicle ? player.GiveVehicle(id) : player.GiveItem(id, amountToBuy);
 
-            if (!success)
-            {
-                UnturnedChat.Say(caller, pluginInstance.Translate("error_giving_item", name));
-                return;
-            }
+                    if (!success)
+                    {
+                        UnturnedChat.Say(caller, pluginInstance.Translate("error_giving_item", name));
+                        return;
+                    }
 
-            decimal newBalance = Uconomy.Instance.Database.IncreaseBalance(player.CSteamID.ToString(), -cost);
+                    ThreadHelper.RunAsynchronously(() =>
+                    {
+                        decimal newBalance = Uconomy.Instance.Database.IncreaseBalance(player.CSteamID.ToString(), -cost);
 
-            if (isVehicle)
-            {
-                UnturnedChat.Say(caller, pluginInstance.Translate("vehicle_buy_msg",
-                    name, cost, Uconomy.Instance.Configuration.Instance.MoneyName, newBalance,
-                    Uconomy.Instance.Configuration.Instance.MoneyName, amountToBuy));
-            }
-            else
-            {
-                UnturnedChat.Say(caller, pluginInstance.Translate("item_buy_msg",
-                    name, cost, Uconomy.Instance.Configuration.Instance.MoneyName, newBalance,
-                    Uconomy.Instance.Configuration.Instance.MoneyName, amountToBuy));
-            }
+                        ThreadHelper.RunSynchronously(() =>
+                        {
+                            string messageKey = isVehicle ? "vehicle_buy_msg" : "item_buy_msg";
+                            UnturnedChat.Say(caller, pluginInstance.Translate(messageKey,
+                                name, cost, Uconomy.Instance.Configuration.Instance.MoneyName, newBalance,
+                                Uconomy.Instance.Configuration.Instance.MoneyName, amountToBuy));
 
-            string itemType;
-            if (isVehicle)
-            {
-                itemType = "vehicle";
-            }
-            else
-            {
-                itemType = "item";
-            }
-            pluginInstance.TriggerOnShopBuy(player, cost, amountToBuy, id, itemType);
-            player.Player.gameObject.SendMessage("ZaupShopOnBuy",
-                new object[] { caller, cost, amountToBuy, id, itemType },
-                SendMessageOptions.DontRequireReceiver);
+                            string itemType = isVehicle ? "vehicle" : "item";
+                            pluginInstance.TriggerOnShopBuy(player, cost, amountToBuy, id, itemType);
+                            player.Player.gameObject.SendMessage("ZaupShopOnBuy",
+                                new object[] { caller, cost, amountToBuy, id, itemType },
+                                SendMessageOptions.DontRequireReceiver);
+                        });
+                    });
+                });
+            });
         }
     }
 }

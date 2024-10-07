@@ -68,18 +68,23 @@ namespace ZaupShop
             return new MySqlConnection(ConnectionString);
         }
 
-        public bool AddItem(int id, string name, decimal cost, bool isChange, decimal? buyback = null)
+        public bool AddItem(int id, string name, decimal cost, bool isChange, decimal? buyback = null, bool dontReplace = false)
         {
             using var connection = createConnection();
             using var command = connection.CreateCommand();
+
             command.CommandText = $@"
                 INSERT INTO `{ZaupShop.Instance.Configuration.Instance.ItemShopTableName}` 
                 (`id`, `itemname`, `cost`, `buyback`) 
-                VALUES (@id, @name, @cost, @buyback)
+                VALUES (@id, @name, @cost, IFNULL(@buyback, 0))
                 ON DUPLICATE KEY UPDATE 
-                `itemname` = VALUES(`itemname`), 
-                `cost` = VALUES(`cost`),
+                `itemname` = VALUES(`itemname`),
+                `cost` = CASE 
+                    WHEN @dontReplace = 1 THEN `cost`
+                    ELSE VALUES(`cost`)
+                END,
                 `buyback` = CASE 
+                    WHEN @dontReplace = 1 THEN `buyback`
                     WHEN @buyback IS NULL THEN `buyback`
                     ELSE VALUES(`buyback`)
                 END";
@@ -88,26 +93,33 @@ namespace ZaupShop
             command.Parameters.AddWithValue("@name", name);
             command.Parameters.AddWithValue("@cost", cost);
             command.Parameters.AddWithValue("@buyback", buyback.HasValue ? buyback.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@dontReplace", dontReplace);
 
             connection.Open();
             int affected = command.ExecuteNonQuery();
             return affected > 0;
         }
 
-        public bool AddVehicle(int id, string name, decimal cost, bool change)
+        public bool AddVehicle(int id, string name, decimal cost, bool change, bool dontReplace = false)
         {
             using var connection = createConnection();
             using var command = connection.CreateCommand();
 
-            command.CommandText = !change
-                ? $@"INSERT INTO `{ZaupShop.Instance.Configuration.Instance.VehicleShopTableName}` 
-                    (`id`, `vehiclename`, `cost`) VALUES (@id, @name, @cost)"
-                : $@"UPDATE `{ZaupShop.Instance.Configuration.Instance.VehicleShopTableName}` 
-                    SET vehiclename=@name, cost=@cost WHERE id=@id";
+            command.CommandText = $@"
+                INSERT INTO `{ZaupShop.Instance.Configuration.Instance.VehicleShopTableName}` 
+                (`id`, `vehiclename`, `cost`) 
+                VALUES (@id, @name, @cost)
+                ON DUPLICATE KEY UPDATE 
+                `vehiclename` = VALUES(`vehiclename`),
+                `cost` = CASE 
+                    WHEN @dontReplace = 1 THEN `cost`
+                    ELSE VALUES(`cost`)
+                END";
 
             command.Parameters.AddWithValue("@id", id);
             command.Parameters.AddWithValue("@name", name);
             command.Parameters.AddWithValue("@cost", cost);
+            command.Parameters.AddWithValue("@dontReplace", dontReplace);
 
             connection.Open();
             int affected = command.ExecuteNonQuery();

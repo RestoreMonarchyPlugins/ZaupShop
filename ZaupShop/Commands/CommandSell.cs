@@ -1,6 +1,5 @@
 ﻿using fr34kyn01535.Uconomy;
 using Rocket.API;
-using Rocket.Core.Assets;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
@@ -13,7 +12,6 @@ namespace ZaupShop.Commands
     public class CommandSell : IRocketCommand
     {
         private ZaupShop pluginInstance => ZaupShop.Instance;
-
         public AllowedCaller AllowedCaller => AllowedCaller.Player;
         public string Name => "sell";
         public string Help => "Allows you to sell items to the shop from your inventory.";
@@ -24,7 +22,6 @@ namespace ZaupShop.Commands
         public void Execute(IRocketPlayer caller, string[] command)
         {
             UnturnedPlayer player = (UnturnedPlayer)caller;
-
             if (command.Length == 0 || (command.Length > 0 && string.IsNullOrWhiteSpace(command[0])))
             {
                 UnturnedChat.Say(caller, pluginInstance.Translate("sell_command_usage"));
@@ -64,32 +61,44 @@ namespace ZaupShop.Commands
                 return;
             }
 
-            decimal price = pluginInstance.ShopDB.GetItemBuyPrice(asset.id);
-            if (price <= 0.00m)
+            ThreadHelper.RunAsynchronously(() =>
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("no_sell_price_set", asset.itemName));
-                return;
-            }
+                decimal price = pluginInstance.ShopDB.GetItemBuyPrice(asset.id);
 
-            decimal addMoney = 0;
-            for (int i = 0; i < amount; i++)
-            {
-                if (player.Player.equipment.checkSelection(items[i].page, items[i].jar.x, items[i].jar.y))
+                ThreadHelper.RunSynchronously(() =>
                 {
-                    player.Player.equipment.dequip();
-                }
+                    if (price <= 0.00m)
+                    {
+                        UnturnedChat.Say(caller, pluginInstance.Translate("no_sell_price_set", asset.itemName));
+                        return;
+                    }
 
-                byte quality = pluginInstance.Configuration.Instance.QualityCounts ? items[i].jar.item.durability : (byte)100;
-                decimal perItemPrice = decimal.Round(price * (quality / 100.0m), 2);
-                addMoney += perItemPrice;
-                player.Inventory.removeItem(items[i].page, player.Inventory.getIndex(items[i].page, items[i].jar.x, items[i].jar.y));
-            }
+                    decimal addMoney = 0;
+                    for (int i = 0; i < amount; i++)
+                    {
+                        if (player.Player.equipment.checkSelection(items[i].page, items[i].jar.x, items[i].jar.y))
+                        {
+                            player.Player.equipment.dequip();
+                        }
+                        byte quality = pluginInstance.Configuration.Instance.QualityCounts ? items[i].jar.item.durability : (byte)100;
+                        decimal perItemPrice = decimal.Round(price * (quality / 100.0m), 2);
+                        addMoney += perItemPrice;
+                        player.Inventory.removeItem(items[i].page, player.Inventory.getIndex(items[i].page, items[i].jar.x, items[i].jar.y));
+                    }
 
-            decimal balance = Uconomy.Instance.Database.IncreaseBalance(player.CSteamID.ToString(), addMoney);
-            UnturnedChat.Say(player, pluginInstance.Translate("sold_items", amount, asset.itemName, addMoney, Uconomy.Instance.Configuration.Instance.MoneyName, balance, Uconomy.Instance.Configuration.Instance.MoneyName));
+                    ThreadHelper.RunAsynchronously(() =>
+                    {
+                        decimal balance = Uconomy.Instance.Database.IncreaseBalance(player.CSteamID.ToString(), addMoney);
 
-            pluginInstance.TriggerOnShopSell(player, addMoney, amount, asset.id);
-            player.Player.gameObject.SendMessage("ZaupShopOnSell", new object[] { player, addMoney, amount, asset.id }, SendMessageOptions.DontRequireReceiver);
+                        ThreadHelper.RunSynchronously(() =>
+                        {
+                            UnturnedChat.Say(player, pluginInstance.Translate("sold_items", amount, asset.itemName, addMoney, Uconomy.Instance.Configuration.Instance.MoneyName, balance, Uconomy.Instance.Configuration.Instance.MoneyName));
+                            pluginInstance.TriggerOnShopSell(player, addMoney, amount, asset.id);
+                            player.Player.gameObject.SendMessage("ZaupShopOnSell", new object[] { player, addMoney, amount, asset.id }, SendMessageOptions.DontRequireReceiver);
+                        });
+                    });
+                });
+            });
         }
     }
 }

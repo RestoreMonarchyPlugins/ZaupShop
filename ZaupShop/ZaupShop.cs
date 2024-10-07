@@ -33,7 +33,7 @@ namespace ZaupShop
             { "sell_command_usage", "Usage: /sell <name or id> [amount] (amount optional)" },
             { "shop_command_usage", "Usage: /shop <add/rem/chng/buy> [v.]<itemid> [cost] [buyback]" },
             { "error_giving_item", "Error: Unable to give you {0}. You have not been charged" },
-            { "error_getting_cost", "Error: Unable to retrieve the cost of {0}" },
+            { "error_getting_cost", "Error: {0} is not for sale" },
             { "item_cost_msg", "Item: {0} | Buy: {1} {2} | Sell: {3} {4}" },
             { "vehicle_cost_msg", "Vehicle: {0} | Buy: {1} {2}" },
             { "item_buy_msg", "Purchase successful: {5} {0} for {1} {2}. Your balance: {3} {4}" },
@@ -88,5 +88,7 @@ namespace ZaupShop
             if (OnShopSell != null)
                 OnShopSell(player, amt, items, item);
         }
+
+
     }
 }

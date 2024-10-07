@@ -1,5 +1,4 @@
 ﻿using SDG.Unturned;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -41,28 +40,19 @@ namespace ZaupShop.Helpers
 
         internal static Asset GetVehicleByIdOrName(string idOrName)
         {
-            List<VehicleAsset> vehicleAssets = new();
-            List<VehicleRedirectorAsset> vehicleRedirectorAssets = new();
-
-            Assets.find(vehicleAssets);
-            Assets.find(vehicleRedirectorAssets);
-
-            List<Asset> assets = [.. vehicleAssets, .. vehicleRedirectorAssets];
+            IEnumerable<Asset> assets = GetAllVehicles();
 
             if (!ushort.TryParse(idOrName, out ushort id))
             {
                 idOrName = idOrName.ToLower();
-            }
-            
+            }            
 
             return assets.FirstOrDefault(a => (id != 0 && a.id == id) || (a?.FriendlyName != null && a.FriendlyName.ToLower().Contains(idOrName)));    
         }
 
         internal static ItemAsset GetItemByIdOrName(string idOrName)
         {
-            List<ItemAsset> itemAssets = new();
-
-            Assets.find(itemAssets);
+            IEnumerable<ItemAsset> itemAssets = GetAllItems();
 
             if (!ushort.TryParse(idOrName, out ushort id))
             {
@@ -70,6 +60,29 @@ namespace ZaupShop.Helpers
             }
 
             return itemAssets.FirstOrDefault(a => (id != 0 && a.id == id) || (a?.FriendlyName != null && a.FriendlyName.ToLower().Contains(idOrName)));
+        }
+
+        internal static IEnumerable<Asset> GetAllVehicles()
+        {
+            List<VehicleAsset> vehicleAssets = new();
+            List<VehicleRedirectorAsset> vehicleRedirectorAssets = new();
+
+            Assets.find(vehicleAssets);
+            Assets.find(vehicleRedirectorAssets);
+
+            Asset[] assets = [.. vehicleAssets, .. vehicleRedirectorAssets];
+
+            return assets.Where(x => !string.IsNullOrEmpty(x.FriendlyName) && x.FriendlyName != "Name").ToArray();
+
+        }
+
+        internal static IEnumerable<ItemAsset> GetAllItems()
+        {
+            List<ItemAsset> itemAssets = new();
+
+            Assets.find(itemAssets);
+
+            return itemAssets.Where(x => !string.IsNullOrEmpty(x.FriendlyName) && x.FriendlyName != "Name").ToArray();
         }
     }
 }
