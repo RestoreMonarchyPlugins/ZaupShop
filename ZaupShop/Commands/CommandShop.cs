@@ -17,7 +17,7 @@ namespace ZaupShop.Commands
         public string Help => "Allows admins to change, add, or remove items/vehicles from the shop.";
         public string Syntax => "<add | rem | chng | buy> [v.]<itemid> <cost>";
         public List<string> Aliases => new List<string>();
-        public List<string> Permissions => new List<string> { "shop.*", "shop.add", "shop.rem" };
+        public List<string> Permissions => new List<string> { "shop.*", "shop.add", "shop.rem", "shop.remove" };
 
         public void Execute(IRocketPlayer caller, string[] msg)
         {

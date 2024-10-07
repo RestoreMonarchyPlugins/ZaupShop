@@ -73,7 +73,6 @@ namespace ZaupShop.Helpers
             Asset[] assets = [.. vehicleAssets, .. vehicleRedirectorAssets];
 
             return assets.Where(x => !string.IsNullOrEmpty(x.FriendlyName) && x.FriendlyName != "Name").ToArray();
-
         }
 
         internal static IEnumerable<ItemAsset> GetAllItems()
@@ -82,7 +81,7 @@ namespace ZaupShop.Helpers
 
             Assets.find(itemAssets);
 
-            return itemAssets.Where(x => !string.IsNullOrEmpty(x.FriendlyName) && x.FriendlyName != "Name").ToArray();
+            return itemAssets.Where(x => !string.IsNullOrEmpty(x.itemName) && x.itemName != "Name" && !x.isPro).ToArray();
         }
     }
 }
