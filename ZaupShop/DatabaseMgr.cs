@@ -1,19 +1,14 @@
-﻿using I18N.West;
+﻿using fr34kyn01535.Uconomy;
 using MySql.Data.MySqlClient;
 using Rocket.Core.Logging;
-using Rocket.API;
 using System;
-using fr34kyn01535.Uconomy;
 
 namespace ZaupShop
 {
     public class DatabaseMgr
     {
-        // The base code for this class comes from Uconomy itself.
-
         internal DatabaseMgr()
         {
-            CP1250 cP1250 = new CP1250();
             this.CheckSchema();
         }
 
