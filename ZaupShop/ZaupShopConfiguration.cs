@@ -19,7 +19,7 @@ namespace ZaupShop
             CanBuyItems = true;
             CanBuyVehicles = true;
             CanSellItems = true;
-            QualityCounts = true;
+            QualityCounts = false;
         }
     }
 }

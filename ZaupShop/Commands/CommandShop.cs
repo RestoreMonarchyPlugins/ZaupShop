@@ -17,18 +17,17 @@ namespace ZaupShop.Commands
         public string Help => "Allows admins to change, add, or remove items/vehicles from the shop.";
         public string Syntax => "<add | rem | chng | buy> [v.]<itemid> <cost>";
         public List<string> Aliases => new List<string>();
-        public List<string> Permissions => new List<string> { "shop.*", "shop.add", "shop.rem", "shop.chng", "shop.buy" };
+        public List<string> Permissions => new List<string> { "shop.*", "shop.add", "shop.rem" };
 
         public void Execute(IRocketPlayer caller, string[] msg)
         {
             bool isConsole = caller is ConsolePlayer;
-            if (!HasPermission(caller, isConsole))
-            {
-                UnturnedChat.Say(caller, "You don't have permission to use the /shop command.");
-                return;
-            }
+            string subCommand = msg.ElementAtOrDefault(0)?.ToLower() ?? null;
 
-            if (msg.Length == 0 || msg.Length < 2 || (msg.Length == 2 && msg[0] != "rem"))
+            if (subCommand == null 
+                || (subCommand == "add" && msg.Length < 3)
+                || ((subCommand == "remove" || subCommand == "rem") && msg.Length < 2)
+                || (subCommand != "add" && subCommand != "remove" && subCommand != "rem"))
             {
                 UnturnedChat.Say(caller, pluginInstance.Translate("shop_command_usage"));
                 return;
@@ -47,19 +46,14 @@ namespace ZaupShop.Commands
                 return;
             }
 
-            switch (msg[0].ToLower())
+            switch (subCommand)
             {
                 case "add":
-                case "chng":
-                case "change":
                     HandleAddOrChange(caller, msg, type, id, isConsole);
                     break;
                 case "rem":
                 case "remove":
                     HandleRemove(caller, type, id, isConsole);
-                    break;
-                case "buy":
-                    HandleBuy(caller, msg, id, isConsole);
                     break;
                 default:
                     UnturnedChat.Say(caller, pluginInstance.Translate("invalid_shop_command"));
@@ -67,19 +61,12 @@ namespace ZaupShop.Commands
             }
         }
 
-        private bool HasPermission(IRocketPlayer caller, bool isConsole)
-        {
-            if (isConsole) return true;
-            if (caller is UnturnedPlayer player && player.IsAdmin) return true;
-            return caller.HasPermission("shop.*") || Permissions.Any(p => caller.HasPermission(p));
-        }
-
         private void HandleAddOrChange(IRocketPlayer caller, string[] msg, string[] type, ushort id, bool isConsole)
         {
             if (!HasRequiredPermission(caller, msg[0], isConsole)) return;
 
-            bool isChange = msg[0].ToLower() == "chng";
-            string action = pluginInstance.Translate(isChange ? "changed" : "added");
+            // add basically adds or change, this is kept for backward compatibility
+            bool isChange = true;
             bool isVehicle = type[0] == "v";
 
             if (!decimal.TryParse(msg[2], out decimal cost))
@@ -133,11 +120,11 @@ namespace ZaupShop.Commands
                     {
                         if (buyback.HasValue)
                         {
-                            message = pluginInstance.Translate("changed_or_added_to_shop_with_buyback", action, name, cost.ToString("N"), buyback.Value.ToString("N"));
+                            message = pluginInstance.Translate("changed_or_added_to_shop_with_buyback", name, cost.ToString("N"), buyback.Value.ToString("N"));
                         }
                         else
                         {
-                            message = pluginInstance.Translate("changed_or_added_to_shop", action, name, cost.ToString("N"));
+                            message = pluginInstance.Translate("changed_or_added_to_shop", name, cost.ToString("N"));
                         }
                     }
                     else
@@ -185,37 +172,6 @@ namespace ZaupShop.Commands
                     string message = success
                         ? pluginInstance.Translate("removed_from_shop", name)
                         : pluginInstance.Translate("not_in_shop_to_remove", name);
-
-                    UnturnedChat.Say(caller, message);
-                });
-            });
-        }
-
-        private void HandleBuy(IRocketPlayer caller, string[] msg, ushort id, bool isConsole)
-        {
-            if (!HasRequiredPermission(caller, "buy", isConsole)) return;
-
-            if (!UnturnedHelper.TryGetItemByIdOrName(id.ToString(), out _, out string name))
-            {
-                UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
-                return;
-            }
-
-            if (!decimal.TryParse(msg[2], out decimal buyPrice))
-            {
-                UnturnedChat.Say(caller, pluginInstance.Translate("invalid_cost"));
-                return;
-            }
-
-            ThreadHelper.RunAsynchronously(() =>
-            {
-                bool success = pluginInstance.ShopDB.SetBuyPrice(id, buyPrice);
-
-                ThreadHelper.RunSynchronously(() =>
-                {
-                    string message = success
-                        ? pluginInstance.Translate("set_buyback_price", name, buyPrice.ToString())
-                        : pluginInstance.Translate("not_in_shop_to_set_buyback", name);
 
                     UnturnedChat.Say(caller, message);
                 });

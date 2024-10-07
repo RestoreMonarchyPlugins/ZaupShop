@@ -2,7 +2,6 @@
 using Rocket.API;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
-using SDG.Unturned;
 using System.Collections.Generic;
 using UnityEngine;
 using ZaupShop.Helpers;
@@ -17,36 +16,51 @@ namespace ZaupShop.Commands
         public string Name => "buy";
         public string Help => "Allows you to buy items from the shop.";
         public string Syntax => "[v.]<name or id> [amount]";
-        public List<string> Aliases => [ "bal" ];
-        public List<string> Permissions => [];
+        public List<string> Aliases => new List<string>();
+        public List<string> Permissions => new List<string>();
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
             var player = (UnturnedPlayer)caller;
 
-            if (command.Length == 0)
+            if (command.Length == 0 || command.Length > 2)
             {
                 UnturnedChat.Say(caller, pluginInstance.Translate("buy_command_usage"));
                 return;
             }
 
             byte amountToBuy = 1;
-            if (command.Length > 1 && !byte.TryParse(command[1], out amountToBuy))
+            if (command.Length == 2 && !byte.TryParse(command[1], out amountToBuy))
             {
                 UnturnedChat.Say(caller, pluginInstance.Translate("invalid_amt"));
                 return;
             }
 
-            var components = Parser.getComponentsFromSerial(command[0], '.');
-            if ((components.Length == 2 && components[0].Trim() != "v") ||
-                (components.Length == 1 && components[0].Trim() == "v") ||
-                components.Length > 2 || command[0].Trim() == string.Empty)
+            bool isVehicle = false;
+            string itemName;
+
+            if (command[0].StartsWith("v."))
+            {
+                isVehicle = true;
+                itemName = command[0].Substring(2);
+            }
+            else if (command[0] == "v" && command.Length == 2)
+            {
+                isVehicle = true;
+                itemName = command[1];
+                amountToBuy = 1; // Reset amount for vehicles
+            }
+            else
+            {
+                itemName = command[0];
+            }
+
+            if (string.IsNullOrWhiteSpace(itemName))
             {
                 UnturnedChat.Say(caller, pluginInstance.Translate("buy_command_usage"));
                 return;
             }
 
-            bool isVehicle = components[0] == "v";
             if (isVehicle && !pluginInstance.Configuration.Instance.CanBuyVehicles)
             {
                 UnturnedChat.Say(caller, pluginInstance.Translate("buy_vehicles_off"));
@@ -60,21 +74,20 @@ namespace ZaupShop.Commands
 
             ushort id;
             string name;
-            string itemToFind = isVehicle ? components[1] : components[0];
 
             if (isVehicle)
             {
-                if (!UnturnedHelper.TryGetVehicleByIdOrName(itemToFind, out id, out name))
+                if (!UnturnedHelper.TryGetVehicleByIdOrName(itemName, out id, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", itemToFind));
+                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", itemName));
                     return;
                 }
             }
             else
             {
-                if (!UnturnedHelper.TryGetItemByIdOrName(itemToFind, out id, out name))
+                if (!UnturnedHelper.TryGetItemByIdOrName(itemName, out id, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", itemToFind));
+                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", itemName));
                     return;
                 }
             }
@@ -99,7 +112,7 @@ namespace ZaupShop.Commands
                     {
                         string amountString = isVehicle ? "1" : amountToBuy.ToString();
                         UnturnedChat.Say(caller, pluginInstance.Translate("not_enough_currency_msg",
-                            Uconomy.Instance.Configuration.Instance.MoneyName, amountString, name));
+                            cost.ToString("N"), Uconomy.Instance.Configuration.Instance.MoneyName, amountString, name));
                         return;
                     }
 
