@@ -17,7 +17,7 @@ namespace ZaupShop
             ItemShopTableName = "uconomyitemshop";
             VehicleShopTableName = "uconomyvehicleshop";
             CanBuyItems = true;
-            CanBuyVehicles = false;
+            CanBuyVehicles = true;
             CanSellItems = true;
             QualityCounts = true;
         }

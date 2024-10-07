@@ -68,36 +68,26 @@ namespace ZaupShop
             return new MySqlConnection(ConnectionString);
         }
 
-        public bool AddItem(int id, string name, decimal cost, decimal? buyback, bool change)
+        public bool AddItem(int id, string name, decimal cost, bool isChange, decimal? buyback = null)
         {
             using var connection = createConnection();
             using var command = connection.CreateCommand();
-
-            if (!change)
-            {
-                command.CommandText = buyback.HasValue
-                    ? $@"INSERT INTO `{ZaupShop.Instance.Configuration.Instance.ItemShopTableName}` 
-                (`id`, `itemname`, `cost`, `buyback`) VALUES (@id, @name, @cost, @buyBack)"
-                    : $@"INSERT INTO `{ZaupShop.Instance.Configuration.Instance.ItemShopTableName}` 
-                (`id`, `itemname`, `cost`) VALUES (@id, @name, @cost)";
-            }
-            else
-            {
-                command.CommandText = buyback.HasValue
-                    ? $@"UPDATE `{ZaupShop.Instance.Configuration.Instance.ItemShopTableName}` 
-                SET itemname=@name, cost=@cost, buyback=@buyBack WHERE id=@id"
-                    : $@"UPDATE `{ZaupShop.Instance.Configuration.Instance.ItemShopTableName}` 
-                SET itemname=@name, cost=@cost WHERE id=@id";
-            }
+            command.CommandText = $@"
+                INSERT INTO `{ZaupShop.Instance.Configuration.Instance.ItemShopTableName}` 
+                (`id`, `itemname`, `cost`, `buyback`) 
+                VALUES (@id, @name, @cost, @buyback)
+                ON DUPLICATE KEY UPDATE 
+                `itemname` = VALUES(`itemname`), 
+                `cost` = VALUES(`cost`),
+                `buyback` = CASE 
+                    WHEN @buyback IS NULL THEN `buyback`
+                    ELSE VALUES(`buyback`)
+                END";
 
             command.Parameters.AddWithValue("@id", id);
             command.Parameters.AddWithValue("@name", name);
             command.Parameters.AddWithValue("@cost", cost);
-
-            if (buyback.HasValue)
-            {
-                command.Parameters.AddWithValue("@buyBack", buyback.Value);
-            }
+            command.Parameters.AddWithValue("@buyback", buyback.HasValue ? buyback.Value : DBNull.Value);
 
             connection.Open();
             int affected = command.ExecuteNonQuery();

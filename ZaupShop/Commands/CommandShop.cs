@@ -124,12 +124,23 @@ namespace ZaupShop.Commands
                     return;
                 }               
 
-                success = pluginInstance.ShopDB.AddItem(id, name, cost, buyback, isChange);
+                success = pluginInstance.ShopDB.AddItem(id, name, cost, isChange, buyback);
             }
 
-            string message = success
-                ? pluginInstance.Translate("changed_or_added_to_shop", action, name, cost)
-                : pluginInstance.Translate("error_adding_or_changing", name);
+            string message;
+            if (success)
+            {
+                if (buyback.HasValue)
+                {
+                    message = pluginInstance.Translate("changed_or_added_to_shop_with_buyback", action, name, cost.ToString("N"), buyback.Value.ToString("N"));
+                } else
+                {
+                    message = pluginInstance.Translate("changed_or_added_to_shop", action, name, cost.ToString("N"));
+                }
+            } else
+            {
+                message = pluginInstance.Translate("error_adding_or_changing", name);
+            }
 
             UnturnedChat.Say(caller, message);
         }
