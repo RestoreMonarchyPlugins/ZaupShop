@@ -53,9 +53,11 @@ namespace ZaupShop.Commands
             {
                 case "add":
                 case "chng":
+                case "change":
                     HandleAddOrChange(caller, msg, type, id, isConsole);
                     break;
                 case "rem":
+                case "remove":
                     HandleRemove(caller, type, id, isConsole);
                     break;
                 case "buy":
@@ -88,6 +90,20 @@ namespace ZaupShop.Commands
                 return;
             }
 
+
+            decimal? buyback = null;
+            if (!isVehicle && msg.Length > 3)
+            {
+                if (!decimal.TryParse(msg[3], out decimal buyBackDecimal))
+                {
+                    UnturnedChat.Say(caller, pluginInstance.Translate("invalid_buyback"));
+                    return;
+                } else
+                {
+                    buyback = buyBackDecimal;
+                }                
+            }
+
             string name;
             bool success;
 
@@ -106,8 +122,9 @@ namespace ZaupShop.Commands
                 {
                     UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
                     return;
-                }
-                success = pluginInstance.ShopDB.AddItem(id, name, cost, isChange);
+                }               
+
+                success = pluginInstance.ShopDB.AddItem(id, name, cost, buyback, isChange);
             }
 
             string message = success
