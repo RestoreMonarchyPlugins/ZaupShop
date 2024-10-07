@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ZaupShop.Helpers;
 
-namespace ZaupShop.Commands
+namespace ZaupShop.Commands.Console
 {
     public class CommandUploadItemShop : IRocketCommand
     {
@@ -24,7 +24,7 @@ namespace ZaupShop.Commands
             int count = items.Count();
 
             Logger.Log($"Detected {count} item assets on the server...");
-            Logger.Log($"Uploading {items.Count()} items to the {ZaupShop.Instance.Configuration.Instance.ItemShopTableName} table in database now...");    
+            Logger.Log($"Uploading {items.Count()} items to the {ZaupShop.Instance.Configuration.Instance.ItemShopTableName} table in database now...");
 
             ThreadHelper.RunAsynchronously(() =>
             {

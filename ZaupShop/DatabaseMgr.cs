@@ -2,6 +2,10 @@
 using MySql.Data.MySqlClient;
 using Rocket.Core.Logging;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using ZaupShop.Models;
 
 namespace ZaupShop
 {
@@ -203,6 +207,42 @@ namespace ZaupShop
             connection.Open();
             object result = command.ExecuteScalar();
             return result != null && decimal.TryParse(result.ToString(), out decimal buyback) ? buyback : 0;
+        }
+
+        public IEnumerable<ItemShop> GetAllItemShop()
+        {
+            List<ItemShop> items = [];
+
+            using var connection = createConnection();
+            using var command = connection.CreateCommand();
+
+            command.CommandText = $"SELECT * FROM `{ZaupShop.Instance.Configuration.Instance.ItemShopTableName}`";
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                items.Add(new ItemShop
+                {
+                    Id = reader.GetUInt16("id"),
+                    ItemName = reader.GetString("itemname"),
+                    BuyPrice = reader.GetDecimal("cost"),
+                    SellPrice = reader.GetDecimal("buyback")
+                });
+            }
+
+            return items;
+        }
+
+        public int DeleteItemShop()
+        {
+            using var connection = createConnection();
+            using var command = connection.CreateCommand();
+
+            command.CommandText = $"DELETE FROM `{ZaupShop.Instance.Configuration.Instance.ItemShopTableName}`";
+
+            connection.Open();
+            return command.ExecuteNonQuery();
         }
     }
 }
