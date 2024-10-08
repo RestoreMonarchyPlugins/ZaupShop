@@ -30,9 +30,7 @@ namespace ZaupShop.Commands.Console
             {
                 foreach (ItemAsset asset in items)
                 {
-                    // get name of item max length 32 characters
-                    string itemName = asset.itemName.Length > 32 ? asset.itemName.Substring(0, 32) : asset.itemName;
-                    pluginInstance.ShopDB.AddItem(asset.id, itemName, 0, false, 0, true);
+                    pluginInstance.ShopDB.AddItem(asset.id, asset.itemName, 0, false, 0, true);
                 }
                 Logger.Log($"Done! Finished syncing {count} items with the {ZaupShop.Instance.Configuration.Instance.ItemShopTableName} table in database!");
             });

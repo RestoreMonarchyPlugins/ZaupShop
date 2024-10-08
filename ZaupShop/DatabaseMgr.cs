@@ -77,6 +77,8 @@ namespace ZaupShop
             using var connection = createConnection();
             using var command = connection.CreateCommand();
 
+            name = name.Length > 32 ? name.Substring(0, 32) : name;
+
             command.CommandText = $@"
                 INSERT INTO `{ZaupShop.Instance.Configuration.Instance.ItemShopTableName}` 
                 (`id`, `itemname`, `cost`, `buyback`) 
@@ -108,6 +110,8 @@ namespace ZaupShop
         {
             using var connection = createConnection();
             using var command = connection.CreateCommand();
+
+            name = name.Length > 32 ? name.Substring(0, 32) : name;
 
             command.CommandText = $@"
                 INSERT INTO `{ZaupShop.Instance.Configuration.Instance.VehicleShopTableName}` 
