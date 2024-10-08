@@ -38,6 +38,10 @@ This is our 2.0 version of popular ZaupShop plugin originally created by **Zamir
 ### Console Commands
 * `uploaditemshop` - Adds all item assets from the server to the `ItemShopTableName` table in database
 * `uploadvehicleshop` - Adds all vehicle assets from the server to the `VehicleShopTableName` table in database
+* `importitemshop <file>` - Imports item shop prices from a JSON file
+* `importvehicleshop <file>` - Imports vehicle shop prices from a JSON file
+* `exportitemshop [file]` - Exports item shop prices to a JSON file
+* `exportvehicleshop [file]` - Exports vehicle shop prices to a JSON file
 
 ## Permissions
 ```xml
