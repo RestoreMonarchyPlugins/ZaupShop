@@ -5,7 +5,7 @@
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>ZaupShop</RootNamespace>
 		<AssemblyName>ZaupShop</AssemblyName>
-		<Version>2.0.0</Version>
+		<Version>2.0.1</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,7 +15,8 @@
 
 	<ItemGroup>
 	  <Reference Include="Uconomy">
-	    <HintPath>..\lib\Uconomy.dll</HintPath>
+		<HintPath>..\lib\Uconomy.dll</HintPath>
+	    <Private>False</Private>
 	  </Reference>
 	</ItemGroup>
 
