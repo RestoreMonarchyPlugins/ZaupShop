@@ -9,6 +9,15 @@ Simple shop for items and vehicles using Uconomy currency.
 
 The plugin uses the same database as Uconomy to store the items and vehicles prices, that's why you don't have to enter the database information in the configuration file.
 
+To save you time, we prepared the prices for almost all items and vehicles and share them at [UnturnedServerConfigs](https://github.com/RestoreMonarchyPlugins/UnturnedServerConfigs) GitHub repository. 
+You can easily import them into your database, by running the following commands in the server console after you have installed the plugin:
+```sh
+importitemshop https://raw.githubusercontent.com/RestoreMonarchyPlugins/UnturnedServerConfigs/refs/heads/master/shop/itemshop.json
+
+importvehicleshop https://raw.githubusercontent.com/RestoreMonarchyPlugins/UnturnedServerConfigs/refs/heads/master/shop/vehicleshop.json
+```
+You can always edit the prices to your liking using MySQL Server client like HeidiSQL, phpMyAdmin or MySQL Workbench.
+
 ## Credits
 This is our 2.0 version of popular ZaupShop plugin originally created by **Zamirathe.** We fixed it, made it lag free and added `uploadvehicleshop` and `uploaditemshop` commands.
 

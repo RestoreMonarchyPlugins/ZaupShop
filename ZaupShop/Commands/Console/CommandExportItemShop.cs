@@ -20,7 +20,10 @@ namespace ZaupShop.Commands.Console
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
-            Export(command.ElementAtOrDefault(0));
+            ThreadHelper.RunAsynchronously(() =>
+            {
+                Export(command.ElementAtOrDefault(0));
+            });            
         }
 
         public static string Export(string fileName = null)

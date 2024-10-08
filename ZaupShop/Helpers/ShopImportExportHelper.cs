@@ -8,7 +8,7 @@ using System.Net;
 
 namespace ZaupShop.Helpers
 {
-    public static class ShopImportExportHelper
+    internal static class ShopImportExportHelper
     {
         internal static string DownloadAndSaveFile<T>(string url, string pluginDirectory)
         {
