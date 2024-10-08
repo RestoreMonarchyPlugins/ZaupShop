@@ -72,7 +72,7 @@ namespace ZaupShop.Helpers
 
             Asset[] assets = [.. vehicleAssets, .. vehicleRedirectorAssets];
 
-            return assets.Where(x => !string.IsNullOrEmpty(x.FriendlyName) && x.FriendlyName != "Name").ToArray();
+            return assets.Where(x => x.id != 0 && !string.IsNullOrEmpty(x.FriendlyName) && x.FriendlyName != "Name").ToArray();
         }
 
         internal static IEnumerable<ItemAsset> GetAllItems()

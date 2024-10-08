@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Rocket.API;
 using Rocket.Core.Logging;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using ZaupShop.Helpers;
@@ -9,12 +8,12 @@ using ZaupShop.Models;
 
 namespace ZaupShop.Commands.Console
 {
-    public class CommandImportItemShop : IRocketCommand
+    public class CommandImportVehicleShop : IRocketCommand
     {
         private ZaupShop pluginInstance => ZaupShop.Instance;
 
         public AllowedCaller AllowedCaller => AllowedCaller.Console;
-        public string Name => "importitemshop";
+        public string Name => "importvehicleshop";
         public string Help => "";
         public string Syntax => "";
         public List<string> Aliases => new List<string>();
@@ -35,7 +34,7 @@ namespace ZaupShop.Commands.Console
                 string path;
                 if (fileName.StartsWith("https://") || fileName.StartsWith("http://"))
                 {
-                    path = ShopImportExportHelper.DownloadAndSaveFile<ItemShop>(fileName, pluginInstance.Directory);
+                    path = ShopImportExportHelper.DownloadAndSaveFile<VehicleShop>(fileName, pluginInstance.Directory);
                     if (path == null) return;
                     fileName = Path.GetFileName(path);
                 }
@@ -50,24 +49,24 @@ namespace ZaupShop.Commands.Console
                     return;
                 }
 
-                Logger.Log($"Loading items from: {fileName}...");
+                Logger.Log($"Loading vehicles from: {fileName}...");
 
                 string json = File.ReadAllText(path);
-                List<ItemShop> itemShops = JsonConvert.DeserializeObject<List<ItemShop>>(json);
+                List<VehicleShop> vehicleShops = JsonConvert.DeserializeObject<List<VehicleShop>>(json);
 
-                Logger.Log($"Loaded {itemShops.Count} items into memory from: {fileName}");
+                Logger.Log($"Loaded {vehicleShops.Count} vehicles into memory from: {fileName}");
 
-                string tableName = pluginInstance.Configuration.Instance.ItemShopTableName;
+                string tableName = pluginInstance.Configuration.Instance.VehicleShopTableName;
                 Logger.Log($"Exporting current {tableName} table contents to file...");
-                CommandExportItemShop.Export();
+                CommandExportVehicleShop.Export();
 
-                int count = pluginInstance.ShopDB.DeleteItemShop();
+                int count = pluginInstance.ShopDB.DeleteVehicleShop();
 
-                Logger.Log($"Deleted {count} items from the {tableName} table in database.");
+                Logger.Log($"Deleted {count} vehicles from the {tableName} table in database.");
 
-                ShopImportExportHelper.ImportItems(itemShops, tableName, item =>
+                ShopImportExportHelper.ImportItems(vehicleShops, tableName, vehicle =>
                 {
-                    pluginInstance.ShopDB.AddItem(item.Id, item.ItemName, item.BuyPrice, false, item.SellPrice, false);
+                    pluginInstance.ShopDB.AddVehicle(vehicle.Id, vehicle.VehicleName, vehicle.BuyPrice, false, false);
                 });
             });
         }

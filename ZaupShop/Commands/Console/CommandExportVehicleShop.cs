@@ -1,5 +1,4 @@
 ﻿using Rocket.API;
-using Rocket.Core.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using ZaupShop.Helpers;
@@ -7,12 +6,12 @@ using ZaupShop.Models;
 
 namespace ZaupShop.Commands.Console
 {
-    public class CommandExportItemShop : IRocketCommand
+    public class CommandExportVehicleShop : IRocketCommand
     {
         private static ZaupShop pluginInstance => ZaupShop.Instance;
 
         public AllowedCaller AllowedCaller => AllowedCaller.Console;
-        public string Name => "exportitemshop";
+        public string Name => "exportvehicleshop";
         public string Help => "";
         public string Syntax => "";
         public List<string> Aliases => new List<string>();
@@ -25,10 +24,10 @@ namespace ZaupShop.Commands.Console
 
         public static string Export(string fileName = null)
         {
-            string tableName = pluginInstance.Configuration.Instance.ItemShopTableName;
-            IEnumerable<ItemShop> itemShops = pluginInstance.ShopDB.GetAllItemShop();
+            string tableName = pluginInstance.Configuration.Instance.VehicleShopTableName;
+            IEnumerable<VehicleShop> vehicleShops = pluginInstance.ShopDB.GetAllVehicleShop();
 
-            return ShopImportExportHelper.ExportItems(itemShops, tableName, pluginInstance.Directory, fileName);
+            return ShopImportExportHelper.ExportItems(vehicleShops, tableName, pluginInstance.Directory, fileName);
         }
     }
 }

@@ -244,5 +244,40 @@ namespace ZaupShop
             connection.Open();
             return command.ExecuteNonQuery();
         }
+
+        public IEnumerable<VehicleShop> GetAllVehicleShop()
+        {
+            List<VehicleShop> vehicles = [];
+
+            using var connection = createConnection();
+            using var command = connection.CreateCommand();
+
+            command.CommandText = $"SELECT * FROM `{ZaupShop.Instance.Configuration.Instance.VehicleShopTableName}`";
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                vehicles.Add(new VehicleShop
+                {
+                    Id = reader.GetUInt16("id"),
+                    VehicleName = reader.GetString("vehiclename"),
+                    BuyPrice = reader.GetDecimal("cost")
+                });
+            }
+
+            return vehicles;
+        }
+
+        public int DeleteVehicleShop()
+        {
+            using var connection = createConnection();
+            using var command = connection.CreateCommand();
+
+            command.CommandText = $"DELETE FROM `{ZaupShop.Instance.Configuration.Instance.VehicleShopTableName}`";
+
+            connection.Open();
+            return command.ExecuteNonQuery();
+        }
     }
 }
