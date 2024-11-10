@@ -5,6 +5,8 @@ namespace ZaupShop
 {
     public class ZaupShopConfiguration : IRocketPluginConfiguration
     {
+        public string MessageColor = "green";
+        public string MessageIconUrl;
         public string ItemShopTableName;
         public string VehicleShopTableName;
         public bool CanBuyItems;
@@ -14,6 +16,8 @@ namespace ZaupShop
 
         public void LoadDefaults()
         {
+            MessageColor = "yellow";
+            MessageIconUrl = "https://i.imgur.com/aMxb6pb.png";
             ItemShopTableName = "uconomyitemshop";
             VehicleShopTableName = "uconomyvehicleshop";
             CanBuyItems = true;

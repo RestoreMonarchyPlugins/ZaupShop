@@ -29,20 +29,20 @@ namespace ZaupShop.Commands
                 || ((subCommand == "remove" || subCommand == "rem") && msg.Length < 2)
                 || (subCommand != "add" && subCommand != "remove" && subCommand != "rem"))
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("shop_command_usage"));
+                pluginInstance.SendMessageToPlayer(caller, "shop_command_usage");
                 return;
             }
 
             string[] type = Parser.getComponentsFromSerial(msg[1], '.');
             if (type.Length > 1 && type[0] != "v")
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("v_not_provided"));
+                pluginInstance.SendMessageToPlayer(caller, "v_not_provided");
                 return;
             }
 
             if (!ushort.TryParse(type.Length > 1 ? type[1] : type[0], out ushort id))
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
+                pluginInstance.SendMessageToPlayer(caller, "invalid_id_given");
                 return;
             }
 
@@ -56,7 +56,7 @@ namespace ZaupShop.Commands
                     HandleRemove(caller, type, id, isConsole);
                     break;
                 default:
-                    UnturnedChat.Say(caller, pluginInstance.Translate("invalid_shop_command"));
+                    pluginInstance.SendMessageToPlayer(caller, "invalid_shop_command");
                     break;
             }
         }
@@ -71,7 +71,7 @@ namespace ZaupShop.Commands
 
             if (!decimal.TryParse(msg[2], out decimal cost))
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("invalid_cost"));
+                pluginInstance.SendMessageToPlayer(caller, "invalid_cost");
                 return;
             }
 
@@ -80,7 +80,7 @@ namespace ZaupShop.Commands
             {
                 if (!decimal.TryParse(msg[3], out decimal buyBackDecimal))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("invalid_buyback"));
+                    pluginInstance.SendMessageToPlayer(caller, "invalid_buyback");
                     return;
                 }
                 else
@@ -94,7 +94,7 @@ namespace ZaupShop.Commands
             {
                 if (!UnturnedHelper.TryGetVehicleByIdOrName(id.ToString(), out _, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
+                    pluginInstance.SendMessageToPlayer(caller, "invalid_id_given");
                     return;
                 }
             }
@@ -102,7 +102,7 @@ namespace ZaupShop.Commands
             {
                 if (!UnturnedHelper.TryGetItemByIdOrName(id.ToString(), out _, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
+                    pluginInstance.SendMessageToPlayer(caller, "invalid_id_given");
                     return;
                 }
             }
@@ -115,24 +115,21 @@ namespace ZaupShop.Commands
 
                 ThreadHelper.RunSynchronously(() =>
                 {
-                    string message;
                     if (success)
                     {
                         if (buyback.HasValue)
                         {
-                            message = pluginInstance.Translate("changed_or_added_to_shop_with_buyback", name, cost.ToString("N"), buyback.Value.ToString("N"));
+                            pluginInstance.SendMessageToPlayer(caller, "changed_or_added_to_shop_with_buyback", name, cost.ToString("N"), buyback.Value.ToString("N"));
                         }
                         else
                         {
-                            message = pluginInstance.Translate("changed_or_added_to_shop", name, cost.ToString("N"));
+                            pluginInstance.SendMessageToPlayer(caller, "changed_or_added_to_shop", name, cost.ToString("N"));
                         }
                     }
                     else
                     {
-                        message = pluginInstance.Translate("error_adding_or_changing", name);
+                        pluginInstance.SendMessageToPlayer(caller, "error_adding_or_changing", name);
                     }
-
-                    UnturnedChat.Say(caller, message);
                 });
             });
         }
@@ -148,7 +145,7 @@ namespace ZaupShop.Commands
             {
                 if (!UnturnedHelper.TryGetVehicleByIdOrName(id.ToString(), out _, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
+                    pluginInstance.SendMessageToPlayer(caller, "invalid_id_given");
                     return;
                 }
             }
@@ -156,7 +153,7 @@ namespace ZaupShop.Commands
             {
                 if (!UnturnedHelper.TryGetItemByIdOrName(id.ToString(), out _, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("invalid_id_given"));
+                    pluginInstance.SendMessageToPlayer(caller, "invalid_id_given");
                     return;
                 }
             }
@@ -169,11 +166,13 @@ namespace ZaupShop.Commands
 
                 ThreadHelper.RunSynchronously(() =>
                 {
-                    string message = success
-                        ? pluginInstance.Translate("removed_from_shop", name)
-                        : pluginInstance.Translate("not_in_shop_to_remove", name);
-
-                    UnturnedChat.Say(caller, message);
+                    if (success)
+                    {
+                        pluginInstance.SendMessageToPlayer(caller, "removed_from_shop", name);
+                    } else
+                    {
+                        pluginInstance.SendMessageToPlayer(caller, "not_in_shop_to_remove", name);
+                    }
                 });
             });
         }
@@ -184,7 +183,7 @@ namespace ZaupShop.Commands
             string permission = $"shop.{action}";
             if (!caller.HasPermission(permission))
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate($"no_permission_shop_{action}"));
+                pluginInstance.SendMessageToPlayer(caller, $"no_permission_shop_{action}");
                 return false;
             }
             return true;

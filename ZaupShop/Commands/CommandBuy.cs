@@ -25,14 +25,14 @@ namespace ZaupShop.Commands
 
             if (command.Length == 0 || command.Length > 2)
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("buy_command_usage"));
+                pluginInstance.SendMessageToPlayer(player, "buy_command_usage");
                 return;
             }
 
             byte amountToBuy = 1;
             if (command.Length == 2 && !byte.TryParse(command[1], out amountToBuy))
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("invalid_amt"));
+                pluginInstance.SendMessageToPlayer(player, "invalid_amt");
                 return;
             }
 
@@ -57,18 +57,18 @@ namespace ZaupShop.Commands
 
             if (string.IsNullOrWhiteSpace(itemName))
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("buy_command_usage"));
+                pluginInstance.SendMessageToPlayer(player, "buy_command_usage");
                 return;
             }
 
             if (isVehicle && !pluginInstance.Configuration.Instance.CanBuyVehicles)
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("buy_vehicles_off"));
+                pluginInstance.SendMessageToPlayer(player, "buy_vehicles_off");
                 return;
             }
             else if (!isVehicle && !pluginInstance.Configuration.Instance.CanBuyItems)
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("buy_items_off"));
+                pluginInstance.SendMessageToPlayer(player, "buy_items_off");
                 return;
             }
 
@@ -79,7 +79,7 @@ namespace ZaupShop.Commands
             {
                 if (!UnturnedHelper.TryGetVehicleByIdOrName(itemName, out id, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", itemName));
+                    pluginInstance.SendMessageToPlayer(player, "could_not_find", itemName);
                     return;
                 }
             }
@@ -87,7 +87,7 @@ namespace ZaupShop.Commands
             {
                 if (!UnturnedHelper.TryGetItemByIdOrName(itemName, out id, out name))
                 {
-                    UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", itemName));
+                    pluginInstance.SendMessageToPlayer(player, "could_not_find", itemName);
                     return;
                 }
             }
@@ -104,15 +104,25 @@ namespace ZaupShop.Commands
                 {
                     if (cost <= 0m)
                     {
-                        UnturnedChat.Say(caller, pluginInstance.Translate(isVehicle ? "vehicle_not_available" : "item_not_available", name));
+                        if (isVehicle)
+                        {
+                            pluginInstance.SendMessageToPlayer(player, "vehicle_not_available", name);
+                        }                            
+                        else
+                        {
+                            pluginInstance.SendMessageToPlayer(player, "item_not_available", name);
+                        }
+
                         return;
                     }
 
                     if (balance < cost)
                     {
                         string amountString = isVehicle ? "1" : amountToBuy.ToString();
-                        UnturnedChat.Say(caller, pluginInstance.Translate("not_enough_currency_msg",
-                            cost.ToString("N"), Uconomy.Instance.Configuration.Instance.MoneyName, amountString, name));
+                        string costString = cost.ToString("N");
+                        string moneyName = Uconomy.Instance.Configuration.Instance.MoneyName;
+
+                        pluginInstance.SendMessageToPlayer(player, "not_enough_currency_msg", costString, moneyName, amountString, name);
                         return;
                     }
 
@@ -120,7 +130,7 @@ namespace ZaupShop.Commands
 
                     if (!success)
                     {
-                        UnturnedChat.Say(caller, pluginInstance.Translate("error_giving_item", name));
+                        pluginInstance.SendMessageToPlayer(player, "error_giving_item", name);
                         return;
                     }
 
@@ -131,9 +141,8 @@ namespace ZaupShop.Commands
                         ThreadHelper.RunSynchronously(() =>
                         {
                             string messageKey = isVehicle ? "vehicle_buy_msg" : "item_buy_msg";
-                            UnturnedChat.Say(caller, pluginInstance.Translate(messageKey,
-                                name, cost, Uconomy.Instance.Configuration.Instance.MoneyName, newBalance,
-                                Uconomy.Instance.Configuration.Instance.MoneyName, amountToBuy));
+                            string moneyName = Uconomy.Instance.Configuration.Instance.MoneyName;
+                            pluginInstance.SendMessageToPlayer(player, messageKey, name, cost, moneyName, newBalance, moneyName, amountToBuy);
 
                             string itemType = isVehicle ? "vehicle" : "item";
                             pluginInstance.TriggerOnShopBuy(player, cost, amountToBuy, id, itemType);

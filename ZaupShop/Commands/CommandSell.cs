@@ -24,40 +24,40 @@ namespace ZaupShop.Commands
             UnturnedPlayer player = (UnturnedPlayer)caller;
             if (command.Length == 0 || (command.Length > 0 && string.IsNullOrWhiteSpace(command[0])))
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("sell_command_usage"));
+                pluginInstance.SendMessageToPlayer(player, "sell_command_usage");
                 return;
             }
 
             byte amount = 1;
             if (command.Length > 1 && !byte.TryParse(command[1], out amount))
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("invalid_amt"));
+                pluginInstance.SendMessageToPlayer(player, "invalid_amt");
                 return;
             }
 
             if (!pluginInstance.Configuration.Instance.CanSellItems)
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("sell_items_off"));
+                pluginInstance.SendMessageToPlayer(player, "sell_items_off");
                 return;
             }
 
             ItemAsset asset = UnturnedHelper.GetItemByIdOrName(command[0]);
             if (asset == null)
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("could_not_find", command[0]));
+                pluginInstance.SendMessageToPlayer(player, "could_not_find", command[0]);
                 return;
             }
 
             List<InventorySearch> items = player.Inventory.search(asset.id, true, true);
             if (items.Count == 0)
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("not_have_item_sell", asset.itemName));
+                pluginInstance.SendMessageToPlayer(player, "not_have_item_sell", asset.itemName);
                 return;
             }
 
             if (items.Count < amount)
             {
-                UnturnedChat.Say(caller, pluginInstance.Translate("not_enough_items_sell", amount.ToString(), asset.itemName));
+                pluginInstance.SendMessageToPlayer(player, "not_enough_items_sell", amount.ToString(), asset.itemName);
                 return;
             }
 
@@ -69,7 +69,7 @@ namespace ZaupShop.Commands
                 {
                     if (price <= 0.00m)
                     {
-                        UnturnedChat.Say(caller, pluginInstance.Translate("no_sell_price_set", asset.itemName));
+                        pluginInstance.SendMessageToPlayer(player, "no_sell_price_set", asset.itemName);
                         return;
                     }
 
@@ -92,7 +92,8 @@ namespace ZaupShop.Commands
 
                         ThreadHelper.RunSynchronously(() =>
                         {
-                            UnturnedChat.Say(player, pluginInstance.Translate("sold_items", amount, asset.itemName, addMoney, Uconomy.Instance.Configuration.Instance.MoneyName, balance, Uconomy.Instance.Configuration.Instance.MoneyName));
+                            string moneyName = Uconomy.Instance.Configuration.Instance.MoneyName;
+                            pluginInstance.SendMessageToPlayer(player, "sold_items", amount, asset.itemName, addMoney, moneyName, balance, moneyName);
                             pluginInstance.TriggerOnShopSell(player, addMoney, amount, asset.id);
                             player.Player.gameObject.SendMessage("ZaupShopOnSell", new object[] { player, addMoney, amount, asset.id }, SendMessageOptions.DontRequireReceiver);
                         });
