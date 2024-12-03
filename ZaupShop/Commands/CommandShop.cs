@@ -2,6 +2,7 @@
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ZaupShop.Helpers;
@@ -34,7 +35,7 @@ namespace ZaupShop.Commands
             }
 
             string[] type = Parser.getComponentsFromSerial(msg[1], '.');
-            if (type.Length > 1 && type[0] != "v")
+            if (type.Length > 1 && !type[0].Equals("v", StringComparison.OrdinalIgnoreCase))
             {
                 pluginInstance.SendMessageToPlayer(caller, "v_not_provided");
                 return;
@@ -67,7 +68,7 @@ namespace ZaupShop.Commands
 
             // add basically adds or change, this is kept for backward compatibility
             bool isChange = true;
-            bool isVehicle = type[0] == "v";
+            bool isVehicle = type[0].Equals("v", StringComparison.OrdinalIgnoreCase);
 
             if (!decimal.TryParse(msg[2], out decimal cost))
             {

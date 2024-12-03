@@ -45,9 +45,16 @@ namespace ZaupShop.Helpers
             if (!ushort.TryParse(idOrName, out ushort id))
             {
                 idOrName = idOrName.ToLower();
-            }            
+            } else
+            {
+                Asset asset = assets.FirstOrDefault(a => a.id == id);
+                if (asset != null)
+                {
+                    return asset;
+                }
+            }
 
-            return assets.FirstOrDefault(a => (id != 0 && a.id == id) || (a?.FriendlyName != null && a.FriendlyName.ToLower().Contains(idOrName)));    
+            return assets.FirstOrDefault(a => a?.FriendlyName != null && a.FriendlyName.ToLower().Contains(idOrName));    
         }
 
         internal static ItemAsset GetItemByIdOrName(string idOrName)
@@ -58,8 +65,16 @@ namespace ZaupShop.Helpers
             {
                 idOrName = idOrName.ToLower();
             }
+            else
+            {
+                ItemAsset itemAsset = itemAssets.FirstOrDefault(a => a.id == id);
+                if (itemAsset != null)
+                {
+                    return itemAsset;
+                }
+            }
 
-            return itemAssets.FirstOrDefault(a => (id != 0 && a.id == id) || (a?.FriendlyName != null && a.FriendlyName.ToLower().Contains(idOrName)));
+            return itemAssets.FirstOrDefault(a => a?.FriendlyName != null && a.FriendlyName.ToLower().Contains(idOrName));
         }
 
         internal static IEnumerable<Asset> GetAllVehicles()

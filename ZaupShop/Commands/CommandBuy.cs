@@ -2,6 +2,7 @@
 using Rocket.API;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using ZaupShop.Helpers;
@@ -39,12 +40,12 @@ namespace ZaupShop.Commands
             bool isVehicle = false;
             string itemName;
 
-            if (command[0].StartsWith("v."))
+            if (command[0].StartsWith("v.", StringComparison.OrdinalIgnoreCase))
             {
                 isVehicle = true;
                 itemName = command[0].Substring(2);
             }
-            else if (command[0] == "v" && command.Length == 2)
+            else if (command[0].Equals("v", StringComparison.OrdinalIgnoreCase) && command.Length == 2)
             {
                 isVehicle = true;
                 itemName = command[1];
@@ -142,7 +143,7 @@ namespace ZaupShop.Commands
                         {
                             string messageKey = isVehicle ? "vehicle_buy_msg" : "item_buy_msg";
                             string moneyName = Uconomy.Instance.Configuration.Instance.MoneyName;
-                            pluginInstance.SendMessageToPlayer(player, messageKey, name, cost, moneyName, newBalance, moneyName, amountToBuy);
+                            pluginInstance.SendMessageToPlayer(player, messageKey, name, cost, moneyName, newBalance.ToString("N"), moneyName, amountToBuy);
 
                             string itemType = isVehicle ? "vehicle" : "item";
                             pluginInstance.TriggerOnShopBuy(player, cost, amountToBuy, id, itemType);

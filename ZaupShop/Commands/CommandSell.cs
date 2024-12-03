@@ -93,7 +93,7 @@ namespace ZaupShop.Commands
                         ThreadHelper.RunSynchronously(() =>
                         {
                             string moneyName = Uconomy.Instance.Configuration.Instance.MoneyName;
-                            pluginInstance.SendMessageToPlayer(player, "sold_items", amount, asset.itemName, addMoney, moneyName, balance, moneyName);
+                            pluginInstance.SendMessageToPlayer(player, "sold_items", amount, asset.itemName, addMoney, moneyName, balance.ToString("N"), moneyName);
                             pluginInstance.TriggerOnShopSell(player, addMoney, amount, asset.id);
                             player.Player.gameObject.SendMessage("ZaupShopOnSell", new object[] { player, addMoney, amount, asset.id }, SendMessageOptions.DontRequireReceiver);
                         });

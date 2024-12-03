@@ -1,6 +1,6 @@
 ﻿using fr34kyn01535.Uconomy;
 using Rocket.API;
-using Rocket.Unturned.Chat;
+using System;
 using System.Collections.Generic;
 using ZaupShop.Helpers;
 
@@ -29,7 +29,7 @@ namespace ZaupShop.Commands
 
             if (command.Length == 1)
             {
-                if (command[0].StartsWith("v."))
+                if (command[0].StartsWith("v.", StringComparison.OrdinalIgnoreCase))
                 {
                     isVehicle = true;
                     itemName = command[0].Substring(2);
@@ -39,9 +39,9 @@ namespace ZaupShop.Commands
                     itemName = command[0];
                 }
             }
-            else // command.Length == 2
+            else
             {
-                if (command[0] == "v")
+                if (command[0].Equals("v", StringComparison.OrdinalIgnoreCase))
                 {
                     isVehicle = true;
                     itemName = command[1];
