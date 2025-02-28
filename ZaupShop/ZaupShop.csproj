@@ -5,7 +5,7 @@
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>ZaupShop</RootNamespace>
 		<AssemblyName>ZaupShop</AssemblyName>
-		<Version>2.1.1</Version>
+		<Version>2.1.2</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
